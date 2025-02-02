@@ -33,12 +33,10 @@ public class SpotifyDataController {
                         staticFiles.location = io.javalin.http.staticfiles.Location.CLASSPATH;
                     });
                     config.jsonMapper(createGsonMapper());
-                    // Add CORS configuration:
-                    config.bundledPlugins.enableCors(cors -> {
-                        cors.addRule(CorsPluginConfig.CorsRule::anyHost);
-                    });
-                })
 
+                    // Configuration for frontend-backend communication
+                    config.bundledPlugins.enableCors(cors -> cors.addRule(CorsPluginConfig.CorsRule::anyHost));
+                })
                 .start(7070);
         setupEndpoints();
     }
@@ -62,19 +60,19 @@ public class SpotifyDataController {
 
     // Top Songs
     private void getTopSongs(Context ctx) {
-        handleAnalysisRequest(ctx, new TopSongsAnalysis(), null, null, null);
+        handleAnalysisRequest(ctx, new TopSongsAnalysis());
     }
     private void getTopSongsByYear(Context ctx) {
         try {
             Integer year = Integer.parseInt(ctx.pathParam("year"));
-            handleAnalysisRequest(ctx, new TopSongsAnalysis(year, null), year, null, null);
+            handleAnalysisRequest(ctx, new TopSongsAnalysis(year, null));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid year format");
         }
     }    private void getTopSongsByMonth(Context ctx) {
         try {
             Integer month = Integer.parseInt(ctx.pathParam("month"));
-            handleAnalysisRequest(ctx, new TopSongsAnalysis(null, month), month, null, null);
+            handleAnalysisRequest(ctx, new TopSongsAnalysis(null, month));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid month format");
         }
@@ -84,7 +82,7 @@ public class SpotifyDataController {
         try {
             Integer year = Integer.parseInt(ctx.pathParam("year"));
             Integer month = Integer.parseInt(ctx.pathParam("month"));
-            handleAnalysisRequest(ctx, new TopSongsAnalysis(year, month), year, month, null);
+            handleAnalysisRequest(ctx, new TopSongsAnalysis(year, month));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid year or month format");
         }
@@ -92,20 +90,20 @@ public class SpotifyDataController {
 
     // Top Artists
     private void getTopArtists(Context ctx) {
-        handleAnalysisRequest(ctx, new TopArtistsAnalysis(), null, null, null);
+        handleAnalysisRequest(ctx, new TopArtistsAnalysis());
     }
 
     private void getTopArtistsByYear(Context ctx) {
         try {
             Integer year = Integer.parseInt(ctx.pathParam("year"));
-            handleAnalysisRequest(ctx, new TopArtistsAnalysis(year, null), year, null, null);
+            handleAnalysisRequest(ctx, new TopArtistsAnalysis(year, null));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid year format");
         }
     }    private void getTopArtistsByMonth(Context ctx) {
         try {
             Integer month = Integer.parseInt(ctx.pathParam("month"));
-            handleAnalysisRequest(ctx, new TopArtistsAnalysis(null, month), month, null, null);
+            handleAnalysisRequest(ctx, new TopArtistsAnalysis(null, month));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid month format");
         }
@@ -115,7 +113,7 @@ public class SpotifyDataController {
         try {
             Integer year = Integer.parseInt(ctx.pathParam("year"));
             Integer month = Integer.parseInt(ctx.pathParam("month"));
-            handleAnalysisRequest(ctx, new TopArtistsAnalysis(year, month), year, month, null);
+            handleAnalysisRequest(ctx, new TopArtistsAnalysis(year, month));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid year or month format");
         }
@@ -123,20 +121,20 @@ public class SpotifyDataController {
 
     // Top Albums
     private void getTopAlbums(Context ctx) {
-        handleAnalysisRequest(ctx, new TopAlbumsAnalysis(), null, null, null);
+        handleAnalysisRequest(ctx, new TopAlbumsAnalysis());
     }
 
     private void getTopAlbumsByYear(Context ctx) {
         try {
             Integer year = Integer.parseInt(ctx.pathParam("year"));
-            handleAnalysisRequest(ctx, new TopAlbumsAnalysis(year, null), year, null, null);
+            handleAnalysisRequest(ctx, new TopAlbumsAnalysis(year, null));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid year format");
         }
     }    private void getTopAlbumsByMonth(Context ctx) {
         try {
             Integer month = Integer.parseInt(ctx.pathParam("month"));
-            handleAnalysisRequest(ctx, new TopAlbumsAnalysis(null, month), month, null, null);
+            handleAnalysisRequest(ctx, new TopAlbumsAnalysis(null, month));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid month format");
         }
@@ -146,26 +144,28 @@ public class SpotifyDataController {
         try {
             Integer year = Integer.parseInt(ctx.pathParam("year"));
             Integer month = Integer.parseInt(ctx.pathParam("month"));
-            handleAnalysisRequest(ctx, new TopAlbumsAnalysis(year, month), year, month, null);
+            handleAnalysisRequest(ctx, new TopAlbumsAnalysis(year, month));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid year or month format");
         }
     }
 
+    // Played Songs by day
     private void getPlayedSongs(Context ctx) {
         try {
             String date =  ctx.pathParam("date");
-            handleAnalysisRequest(ctx, new PlayedSongsByDayAnalysis(date), null, null, date);
+            handleAnalysisRequest(ctx, new PlayedSongsByDayAnalysis(date));
         } catch (NumberFormatException e) {
             ctx.status(400).result("Invalid year format");
         }
     }
 
+    // Explore data statistics
     private void getExploreStatistics(Context ctx) {
-        handleAnalysisRequest(ctx, new ExploreStatisticsAnalysis(), null, null, null);
+        handleAnalysisRequest(ctx, new ExploreStatisticsAnalysis());
     }
 
-    private void handleAnalysisRequest(Context ctx, Analysis analysis, Integer year, Integer month, String date) {
+    private void handleAnalysisRequest(Context ctx, Analysis analysis) {
         UploadedFile file = ctx.uploadedFile("file");
         if (file == null) {
             ctx.status(400).result("No file uploaded");
@@ -173,14 +173,13 @@ public class SpotifyDataController {
         }
 
         try {
-            // Generate a cache key based on file content
+            // Generate cache key based on file
             String cacheKey = getCacheKey(file.content());
 
-            // Check if data is already in cache
+            // Check if cache exists
             List<StreamingHistoryEntry> entries = cache.get(cacheKey);
 
             if (entries == null) {
-                // Data not in cache, parse the CSV and store in cache
                 entries = SpotifyDataService.parseCsv(file.content());
                 cache.put(cacheKey, entries);
                 System.out.println("Data parsed and cached.");
@@ -208,11 +207,13 @@ public class SpotifyDataController {
                 .create();
 
         return new JsonMapper() {
+            @NotNull
             @Override
             public <T> T fromJsonString(@NotNull String json, @NotNull Type targetType) {
                 return gson.fromJson(json, targetType);
             }
 
+            @NotNull
             @Override
             public String toJsonString(@NotNull Object obj, @NotNull Type type) {
                 return gson.toJson(obj, type);

@@ -28,9 +28,7 @@ public class SpotifyDataService {
                     record.get("master_metadata_track_name"),
                     record.get("master_metadata_album_artist_name"),
                     record.get("master_metadata_album_album_name"),
-                    record.get("spotify_track_uri"),
-                    record.get("reason_start"),
-                    record.get("reason_end")
+                    record.get("spotify_track_uri")
             );
             entries.add(entry);
         }

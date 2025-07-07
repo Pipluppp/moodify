@@ -10,3 +10,6 @@
 **Hard parts**
 
 - After responding with the request, how to format the list (Spotify embeds? Rate limit issues)
+
+
+Frontend taken from [Codrop](https://tympanus.net/codrops), code in https://github.com/Pipluppp/spotify-unwrap-frontend

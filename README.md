@@ -1,4 +1,7 @@
-# Spotify Unwrap
+# Moodify
+
+![demo](https://github.com/user-attachments/assets/059234fd-cd9d-4f27-8859-abf847ed4dd6)
+
 
 - Import Spotify extended streaming history data
 - Parse the data for Top Songs, Albums, Artists across years, months, etc.
